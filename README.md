@@ -20,12 +20,14 @@ Load and display beam data from Excel
 Modern responsive UI
 
 🛠 Tech Stack
-Layer	Technology
-Backend	Python, Flask
-Calculations	Engineering formulas (IS 456)
-Data	Excel (Pandas, OpenPyXL)
-Frontend	HTML5, CSS3 (Flexbox), JavaScript
-Hosting	GitHub
+| Layer        | Technology                        |
+| ------------ | --------------------------------- |
+| Backend      | Python, Flask                     |
+| Calculations | Engineering formulas (IS 456)     |
+| Data         | Excel (Pandas, OpenPyXL)          |
+| Frontend     | HTML5, CSS3 (Flexbox), JavaScript |
+| Hosting      | GitHub                            |
+
 📂 Project Structure
 beam-design-app/
 │
@@ -44,6 +46,7 @@ beam-design-app/
     ├── about.html
     ├── contact.html
     └── calculator.html
+
 
 ⚙️ How to Run Locally
 1️⃣ Clone the repository
