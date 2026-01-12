@@ -1,0 +1,26 @@
+<!-- templates/index.html - Homepage -->
+{% extends "base.html" %}
+
+{% block title %}Home - Beam Design Calculator{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card">
+        <h2>Welcome to Beam Design Calculator</h2>
+        <p>This application helps structural engineers design singly reinforced concrete beams according to standard codes and practices.</p>
+        
+        <h3>Features:</h3>
+        <ul>
+            <li>Calculate required reinforcement for concrete beams</li>
+            <li>View and analyze existing beam designs</li>
+            <li>Interactive calculator with instant results</li>
+            <li>Responsive design for mobile and desktop</li>
+        </ul>
+    </div>
+
+    <div class="card">
+        <h2>Quick Start</h2>
+        <p>Navigate to the <a href="{{ url_for('calculator') }}">Calculator</a> page to begin designing your beam or view existing designs.</p>
+    </div>
+</div>
+{% endblock %}

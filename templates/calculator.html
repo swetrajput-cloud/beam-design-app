@@ -1,0 +1,288 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="card">
+        <h2>🏗️ Complete Beam Design Calculator</h2>
+        
+        <div id="beamForm">
+            <h3>Input Parameters:</h3>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="width">Beam Width - b (mm):</label>
+                    <input type="number" id="width" value="300" step="1" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="depth">Total Depth - D (mm):</label>
+                    <input type="number" id="depth" value="500" step="1" required>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="cover">Effective Cover (mm):</label>
+                    <input type="number" id="cover" value="40" step="1" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="moment">Design Moment - Mu (kN-m):</label>
+                    <input type="number" id="moment" value="100" step="0.01" required>
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="fck">Concrete Grade - fck (N/mm²):</label>
+                    <select id="fck">
+                        <option value="20">M20 (fck = 20)</option>
+                        <option value="25">M25 (fck = 25)</option>
+                        <option value="30">M30 (fck = 30)</option>
+                        <option value="35">M35 (fck = 35)</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="fy">Steel Grade - fy (N/mm²):</label>
+                    <select id="fy">
+                        <option value="415">Fe415 (fy = 415)</option>
+                        <option value="500">Fe500 (fy = 500)</option>
+                    </select>
+                </div>
+            </div>
+            
+            <button onclick="calculateBeam()" style="width: 100%; margin-top: 1rem; font-size: 1.1rem;">
+                🧮 Calculate Complete Design
+            </button>
+        </div>
+        
+        <div id="results" style="display: none; margin-top: 2rem; border-top: 2px solid #3498db; padding-top: 2rem;">
+            <h3>📊 Design Results:</h3>
+            
+            <div style="background: #f8f9fa; padding: 1.5rem; border-radius: 8px; margin-top: 1rem;">
+                <h4 style="color: #2c3e50; margin-bottom: 1rem;">Basic Parameters:</h4>
+                <table style="width: 100%;">
+                    <tr>
+                        <td><strong>Effective Depth (d):</strong></td>
+                        <td id="res_d_eff"></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Design Moment (Mu):</strong></td>
+                        <td id="res_Mu"></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Design Shear (Vu):</strong></td>
+                        <td id="res_Vu"></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Approx. Lever Arm (z):</strong></td>
+                        <td id="res_z"></td>
+                    </tr>
+                </table>
+            </div>
+            
+            <div style="background: #fff3cd; padding: 1.5rem; border-radius: 8px; margin-top: 1rem;">
+                <h4 style="color: #856404; margin-bottom: 1rem;">Moment Capacity Check:</h4>
+                <table style="width: 100%;">
+                    <tr>
+                        <td><strong>Limiting R:</strong></td>
+                        <td id="res_R_lim"></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Mu_lim:</strong></td>
+                        <td id="res_Mu_lim"></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Check (Mu ≤ Mu_lim):</strong></td>
+                        <td id="res_check_mu" style="font-weight: bold;"></td>
+                    </tr>
+                </table>
+            </div>
+            
+            <div style="background: #d1ecf1; padding: 1.5rem; border-radius: 8px; margin-top: 1rem;">
+                <h4 style="color: #0c5460; margin-bottom: 1rem;">Steel Reinforcement:</h4>
+                <table style="width: 100%;">
+                    <tr>
+                        <td><strong>Required Ast:</strong></td>
+                        <td id="res_Ast_required"></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Minimum Ast:</strong></td>
+                        <td id="res_Ast_min"></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Ast to be Used:</strong></td>
+                        <td id="res_Ast_use" style="font-weight: bold; color: #0c5460;"></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Area of one bar (π/4×φ²):</strong></td>
+                        <td id="res_bar_area"></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Number of bars:</strong></td>
+                        <td id="res_num_bars" style="font-weight: bold; color: #0c5460;"></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Provided Ast:</strong></td>
+                        <td id="res_Ast_provided" style="font-weight: bold; color: #0c5460;"></td>
+                    </tr>
+                    <tr>
+                        <td><strong>% Tension Steel (ρ):</strong></td>
+                        <td id="res_percent_steel"></td>
+                    </tr>
+                </table>
+            </div>
+            
+            <div style="background: #d4edda; padding: 1.5rem; border-radius: 8px; margin-top: 1rem;">
+                <h4 style="color: #155724; margin-bottom: 1rem;">Shear Design:</h4>
+                <table style="width: 100%;">
+                    <tr>
+                        <td><strong>Nominal Shear Stress (τᵥ):</strong></td>
+                        <td id="res_tau_v"></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Allowable Shear Stress (τc):</strong></td>
+                        <td id="res_tc"></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Shear Check (τᵥ ≤ τc):</strong></td>
+                        <td id="res_shear_check" style="font-weight: bold;"></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Stirrup Single Leg Area:</strong></td>
+                        <td id="res_stirrup_single"></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Total Stirrup Area (2 legs):</strong></td>
+                        <td id="res_stirrup_total"></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Required Spacing Sv:</strong></td>
+                        <td id="res_spacing_req"></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Recommended Max Spacing:</strong></td>
+                        <td id="res_max_spacing" style="font-weight: bold; color: #155724;"></td>
+                    </tr>
+                </table>
+            </div>
+            
+            <div style="background: #e2e3e5; padding: 1.5rem; border-radius: 8px; margin-top: 1rem; text-align: center;">
+                <h4 style="color: #383d41;">✅ Final Design Recommendation:</h4>
+                <p id="final_recommendation" style="font-size: 1.1rem; font-weight: bold; color: #383d41; margin-top: 1rem;"></p>
+            </div>
+        </div>
+    </div>
+
+    {% if beam_data %}
+    <div class="card">
+        <h2>📋 Existing Beam Designs from Excel</h2>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        {% for column in beam_data[0].keys() %}
+                        <th>{{ column }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in beam_data %}
+                    <tr>
+                        {% for value in row.values() %}
+                        <td>{{ value }}</td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+async function calculateBeam() {
+    const formData = {
+        width: document.getElementById('width').value,
+        depth: document.getElementById('depth').value,
+        cover: document.getElementById('cover').value,
+        moment: document.getElementById('moment').value,
+        fck: document.getElementById('fck').value,
+        fy: document.getElementById('fy').value
+    };
+    
+    try {
+        const response = await fetch('/api/calculate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData)
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            const r = data.results;
+            
+            // Display results
+            document.getElementById('res_d_eff').textContent = r.d_eff.toFixed(2) + ' mm';
+            document.getElementById('res_Mu').textContent = r.Mu.toFixed(2) + ' kN-m';
+            document.getElementById('res_Vu').textContent = r.Vu.toFixed(2) + ' N';
+            document.getElementById('res_z').textContent = r.z.toFixed(2) + ' mm';
+            
+            document.getElementById('res_R_lim').textContent = r.R_lim.toFixed(3);
+            document.getElementById('res_Mu_lim').textContent = r.Mu_lim.toFixed(2) + ' N-mm';
+            document.getElementById('res_check_mu').textContent = r.check_mu;
+            
+            document.getElementById('res_Ast_required').textContent = r.Ast_required.toFixed(2) + ' mm²';
+            document.getElementById('res_Ast_min').textContent = r.Ast_min.toFixed(2) + ' mm²';
+            document.getElementById('res_Ast_use').textContent = r.Ast_use.toFixed(2) + ' mm²';
+            document.getElementById('res_bar_area').textContent = r.bar_area.toFixed(2) + ' mm²';
+            document.getElementById('res_num_bars').textContent = r.num_bars + ' bars';
+            document.getElementById('res_Ast_provided').textContent = r.Ast_provided.toFixed(2) + ' mm²';
+            document.getElementById('res_percent_steel').textContent = r.percent_steel.toFixed(2) + ' %';
+            
+            document.getElementById('res_tau_v').textContent = r.tau_v.toFixed(3) + ' N/mm²';
+            document.getElementById('res_tc').textContent = r.tc.toFixed(3) + ' N/mm²';
+            document.getElementById('res_shear_check').textContent = r.shear_check;
+            document.getElementById('res_stirrup_single').textContent = r.stirrup_area_single.toFixed(2) + ' mm²';
+            document.getElementById('res_stirrup_total').textContent = r.stirrup_area_total.toFixed(2) + ' mm²';
+            
+            if (r.spacing_required) {
+                document.getElementById('res_spacing_req').textContent = r.spacing_required.toFixed(2) + ' mm';
+            } else {
+                document.getElementById('res_spacing_req').textContent = 'Not required';
+            }
+            
+            document.getElementById('res_max_spacing').textContent = r.max_spacing.toFixed(2) + ' mm';
+            
+            // Final recommendation
+            const recommendation = `Provide ${r.num_bars} bars of 16mm dia. ` + 
+                                 (r.spacing_required ? 
+                                  `Use 8mm stirrups @ ${Math.min(r.spacing_required, r.max_spacing).toFixed(0)}mm c/c` : 
+                                  `Minimum stirrups @ ${r.max_spacing.toFixed(0)}mm c/c`);
+            document.getElementById('final_recommendation').textContent = recommendation;
+            
+            // Show results section
+            document.getElementById('results').style.display = 'block';
+            
+            // Scroll to results
+            document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+        } else {
+            alert('Error: ' + data.error);
+        }
+    } catch (error) {
+        alert('Calculation error: ' + error.message);
+    }
+}
+</script>
+{% endblock %}
+```
+
+---
+
+## 🎯 Now Run Your Updated App:
+```
+cd C:\Users\swetr\Downloads\beam-design-app
+python app.py
